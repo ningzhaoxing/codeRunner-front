@@ -7,6 +7,7 @@ import { executeCode } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
 import CodeBlockHeader from "./CodeBlockHeader";
 import OutputPanel from "./OutputPanel";
+import AIPanel from "./AIPanel";
 
 // Monaco Editor only runs on the client. Load it dynamically with ssr: false.
 const Editor = dynamic(() => import("@monaco-editor/react").then((m) => m.default), {
@@ -22,6 +23,9 @@ interface CodeBlockProps {
   blockId: string;
   code: string;
   language: string;
+  articleId?: string;
+  articleContent?: string;
+  allCodeBlocks?: { block_id: string; language: string; code: string }[];
 }
 
 interface LangInfo {
@@ -51,7 +55,7 @@ function resolveLanguage(lang: string): LangInfo {
   }
 }
 
-export default function CodeBlock({ blockId, code, language }: CodeBlockProps) {
+export default function CodeBlock({ blockId, code, language, articleId, articleContent, allCodeBlocks }: CodeBlockProps) {
   const langInfo = useMemo(() => resolveLanguage(language), [language]);
 
   const block = usePostStore((s) => s.codeBlocks[blockId]);
@@ -86,7 +90,6 @@ export default function CodeBlock({ blockId, code, language }: CodeBlockProps) {
 
   const lineCount = currentCode.split("\n").length;
   const editorHeight = Math.max(80, Math.min(300, lineCount * 20 + 16));
-  const expandedHeight = Math.max(300, Math.min(600, lineCount * 20 + 16));
 
   const handleRun = async () => {
     if (isRunning) return;
@@ -141,6 +144,57 @@ export default function CodeBlock({ blockId, code, language }: CodeBlockProps) {
     updateCode(blockId, value ?? "");
   };
 
+  const editorOptions = {
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    fontSize: 13,
+    lineHeight: 20,
+    padding: { top: 12 },
+    renderLineHighlight: "none" as const,
+    overviewRulerLanes: 0,
+    hideCursorInOverviewRuler: true,
+    scrollbar: { vertical: "hidden" as const, horizontal: "auto" as const },
+  };
+
+  if (isExpanded) {
+    return (
+      <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1 shadow-xl">
+        <div className="flex" style={{ minHeight: 400 }}>
+          <div className="flex-[6] flex flex-col border-r border-border min-w-0">
+            <CodeBlockHeader
+              filename={langInfo.filename}
+              language={langInfo.label}
+              isRunning={isRunning}
+              isExpanded={true}
+              onRun={handleRun}
+              onToggleAI={handleToggleAI}
+              onToggleExpand={handleToggleExpand}
+            />
+            <div className="flex-1">
+              <Editor
+                height="100%"
+                language={langInfo.monacoLang}
+                value={currentCode}
+                onChange={handleEditorChange}
+                theme="vs-dark"
+                options={editorOptions}
+              />
+            </div>
+            <OutputPanel output={output} error={runError} isRunning={isRunning} />
+          </div>
+          <div className="flex-[4] min-w-0">
+            <AIPanel
+              blockId={blockId}
+              articleId={articleId ?? ""}
+              articleContent={articleContent ?? ""}
+              allCodeBlocks={allCodeBlocks ?? []}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1">
       <CodeBlockHeader
@@ -152,24 +206,14 @@ export default function CodeBlock({ blockId, code, language }: CodeBlockProps) {
         onToggleAI={handleToggleAI}
         onToggleExpand={handleToggleExpand}
       />
-      <div style={{ height: isExpanded ? expandedHeight : editorHeight }}>
+      <div style={{ height: editorHeight }}>
         <Editor
           height="100%"
           language={langInfo.monacoLang}
           value={currentCode}
           onChange={handleEditorChange}
           theme="vs-dark"
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            fontSize: 13,
-            lineHeight: 20,
-            padding: { top: 12 },
-            renderLineHighlight: "none",
-            overviewRulerLanes: 0,
-            hideCursorInOverviewRuler: true,
-            scrollbar: { vertical: "hidden", horizontal: "auto" },
-          }}
+          options={editorOptions}
         />
       </div>
       <OutputPanel output={output} error={runError} isRunning={isRunning} />

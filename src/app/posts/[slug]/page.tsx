@@ -23,7 +23,7 @@ export default async function PostPage({
   return (
     <div className="max-w-[720px] mx-auto px-6 pt-14 pb-16">
       <ArticleHeader article={article} />
-      <MarkdownRenderer content={article.content} />
+      <MarkdownRenderer content={article.content} articleId={article.slug} articleContent={article.content} />
     </div>
   );
 }

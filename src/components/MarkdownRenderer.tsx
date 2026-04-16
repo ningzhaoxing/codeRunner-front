@@ -7,11 +7,29 @@ import Link from "next/link";
 import type { Components } from "react-markdown";
 import CodeBlock from "./CodeBlock";
 
-export default function MarkdownRenderer({ content }: { content: string }) {
+interface MarkdownRendererProps {
+  content: string;
+  articleId?: string;
+  articleContent?: string;
+}
+
+function extractCodeBlocks(content: string): { block_id: string; language: string; code: string }[] {
+  const blocks: { block_id: string; language: string; code: string }[] = [];
+  const regex = /```(\w+)\n([\s\S]*?)```/g;
+  let match;
+  let i = 0;
+  while ((match = regex.exec(content)) !== null) {
+    blocks.push({ block_id: `block-${i}`, language: match[1], code: match[2].trim() });
+    i++;
+  }
+  return blocks;
+}
+
+export default function MarkdownRenderer({ content, articleId, articleContent }: MarkdownRendererProps) {
   const blockCounterRef = useRef(0);
-  // Reset the counter on every render so block IDs stay stable across re-renders
-  // for the same content.
   blockCounterRef.current = 0;
+
+  const allCodeBlocks = useMemo(() => extractCodeBlocks(content), [content]);
 
   const components = useMemo<Components>(
     () => ({
@@ -39,7 +57,16 @@ export default function MarkdownRenderer({ content }: { content: string }) {
           const lang = className?.replace("language-", "") || "text";
           const blockId = `block-${blockCounterRef.current++}`;
           const codeText = String(children).replace(/\n$/, "");
-          return <CodeBlock blockId={blockId} code={codeText} language={lang} />;
+          return (
+            <CodeBlock
+              blockId={blockId}
+              code={codeText}
+              language={lang}
+              articleId={articleId}
+              articleContent={articleContent}
+              allCodeBlocks={allCodeBlocks}
+            />
+          );
         }
         return (
           <code
@@ -90,7 +117,8 @@ export default function MarkdownRenderer({ content }: { content: string }) {
         </ol>
       ),
     }),
-    []
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [articleId, articleContent, allCodeBlocks]
   );
 
   return (
