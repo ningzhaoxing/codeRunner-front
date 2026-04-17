@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePostStore } from "@/store/usePostStore";
+import { usePlaygroundStore } from "@/store/usePlaygroundStore";
 import { confirmProposal } from "@/lib/api";
 
 interface CodeSuggestionProps {
@@ -10,10 +11,23 @@ interface CodeSuggestionProps {
 }
 
 export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionProps) {
-  const proposal = usePostStore((s) => s.session.proposals[proposalId]);
-  const sessionId = usePostStore((s) => s.session.sessionId);
-  const updateCode = usePostStore((s) => s.updateCode);
-  const updateProposalStatus = usePostStore((s) => s.updateProposalStatus);
+  const postStoreProposal = usePostStore((s) => s.session.proposals[proposalId]);
+  const playgroundProposal = usePlaygroundStore((s) => s.proposals[proposalId]);
+  const proposal = playgroundProposal || postStoreProposal;
+
+  const postSessionId = usePostStore((s) => s.session.sessionId);
+  const playgroundSessionId = usePlaygroundStore((s) => s.sessionId);
+
+  const isPlayground = !!playgroundProposal;
+  const sessionId = isPlayground ? playgroundSessionId : postSessionId;
+
+  const postUpdateCode = usePostStore((s) => s.updateCode);
+  const playgroundSetCode = usePlaygroundStore((s) => s.setCode);
+
+  const postUpdateProposalStatus = usePostStore((s) => s.updateProposalStatus);
+  const playgroundUpdateProposalStatus = usePlaygroundStore((s) => s.updateProposalStatus);
+  const updateProposalStatus = isPlayground ? playgroundUpdateProposalStatus : postUpdateProposalStatus;
+
   const [remaining, setRemaining] = useState("");
   const [confirming, setConfirming] = useState(false);
 
@@ -41,8 +55,13 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
 
   const isExpired = proposal.status === "expired";
   const isConfirmed = proposal.status === "confirmed" || proposal.status === "executed";
+
   const handleApply = () => {
-    updateCode(blockId, proposal.code);
+    if (isPlayground) {
+      playgroundSetCode(proposal.code);
+    } else {
+      postUpdateCode(blockId, proposal.code);
+    }
   };
 
   const handleConfirm = async () => {
