@@ -12,6 +12,9 @@ export default function Navbar() {
           <Link href="/" className="text-text-secondary hover:text-text-title text-sm transition-colors">
             首页
           </Link>
+          <Link href="/playground" className="text-text-secondary hover:text-text-title text-sm transition-colors">
+            Playground
+          </Link>
           <Link href="/tags" className="text-text-secondary hover:text-text-title text-sm transition-colors">
             标签
           </Link>

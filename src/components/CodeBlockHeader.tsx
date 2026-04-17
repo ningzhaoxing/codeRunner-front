@@ -8,6 +8,7 @@ interface CodeBlockHeaderProps {
   onRun: () => void;
   onToggleAI: () => void;
   onToggleExpand: () => void;
+  onOpenPlayground?: () => void;
 }
 
 export default function CodeBlockHeader({
@@ -18,6 +19,7 @@ export default function CodeBlockHeader({
   onRun,
   onToggleAI,
   onToggleExpand,
+  onOpenPlayground,
 }: CodeBlockHeaderProps) {
   return (
     <div className="flex items-center justify-between bg-surface-2 border-b border-border px-3 py-1.5">
@@ -48,6 +50,15 @@ export default function CodeBlockHeader({
         >
           {isExpanded ? "⤡" : "⤢"}
         </button>
+        {onOpenPlayground && (
+          <button
+            onClick={onOpenPlayground}
+            className="hover:bg-surface-3 px-1.5 py-0.5 rounded text-xs transition-colors"
+            title="在 Playground 中打开"
+          >
+            ↗
+          </button>
+        )}
       </div>
     </div>
   );

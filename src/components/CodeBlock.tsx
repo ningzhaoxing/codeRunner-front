@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { usePostStore } from "@/store/usePostStore";
 import { executeCode } from "@/lib/api";
+import { encodeCode } from "@/lib/share";
 import type { SSEEvent } from "@/lib/sse";
 import CodeBlockHeader from "./CodeBlockHeader";
 import OutputPanel from "./OutputPanel";
@@ -67,6 +69,8 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
 
   const abortRef = useRef<AbortController | null>(null);
 
+  const router = useRouter();
+
   // Initialize the block on first mount (or when blockId changes) if not present.
   useEffect(() => {
     const current = usePostStore.getState().codeBlocks[blockId];
@@ -90,6 +94,13 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
 
   const lineCount = currentCode.split("\n").length;
   const editorHeight = Math.max(80, Math.min(300, lineCount * 20 + 16));
+
+  const handleOpenPlayground = useCallback(() => {
+    const encoded = encodeCode(currentCode);
+    if (encoded) {
+      router.push(`/playground?lang=${langInfo.monacoLang}&code=${encoded}`);
+    }
+  }, [currentCode, langInfo.monacoLang, router]);
 
   const handleRun = async () => {
     if (isRunning) return;
@@ -169,6 +180,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
               onRun={handleRun}
               onToggleAI={handleToggleAI}
               onToggleExpand={handleToggleExpand}
+              onOpenPlayground={handleOpenPlayground}
             />
             <div className="flex-1">
               <Editor
@@ -205,6 +217,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
         onRun={handleRun}
         onToggleAI={handleToggleAI}
         onToggleExpand={handleToggleExpand}
+        onOpenPlayground={handleOpenPlayground}
       />
       <div style={{ height: editorHeight }}>
         <Editor
