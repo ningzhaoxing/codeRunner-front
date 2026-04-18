@@ -8,7 +8,7 @@ on:
 env:
   IMAGE_NAME: coderunner-front
   CONTAINER_NAME: coderunner-front
-  DEPLOY_PATH: /opt/coderunner/codeRunner-front
+  DEPLOY_PATH: /root/workspace/codeRunner/codeRunner-front
 
 jobs:
   deploy:
