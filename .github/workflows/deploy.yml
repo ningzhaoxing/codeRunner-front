@@ -8,7 +8,7 @@ on:
 env:
   IMAGE_NAME: coderunner-front
   CONTAINER_NAME: coderunner-front
-  DEPLOY_PATH: /root/workspace/codeRunner/codeRunner-front
+  DEPLOY_PATH: /root/workspace/codeRunner/codeRunner-backend/codeRunner-front
 
 jobs:
   deploy:
@@ -23,24 +23,27 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             # Pull latest code
-            cd ${{ env.DEPLOY_PATH }} || git clone git@github.com:ningzhaoxing/codeRunner-front.git ${{ env.DEPLOY_PATH }}
+            if [ ! -d "${{ env.DEPLOY_PATH }}/.git" ]; then
+              mkdir -p ${{ env.DEPLOY_PATH }}
+              git clone https://github.com/ningzhaoxing/codeRunner-front.git ${{ env.DEPLOY_PATH }}
+            fi
             cd ${{ env.DEPLOY_PATH }}
             git fetch origin main
             git reset --hard origin/main
 
             # Build image on server
-            docker build \
+            /usr/bin/docker build \
               --build-arg NEXT_PUBLIC_API_BASE=${{ secrets.NEXT_PUBLIC_API_BASE }} \
               -t ${{ env.IMAGE_NAME }}:latest .
 
             # Restart container
-            docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
-            docker rm ${{ env.CONTAINER_NAME }} 2>/dev/null || true
-            docker run -d \
+            /usr/bin/docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
+            /usr/bin/docker rm ${{ env.CONTAINER_NAME }} 2>/dev/null || true
+            /usr/bin/docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               --restart unless-stopped \
               -p 3000:3000 \
               ${{ env.IMAGE_NAME }}:latest
 
             # Cleanup
-            docker image prune -f
+            /usr/bin/docker image prune -f
