@@ -21,6 +21,7 @@ interface PostStore {
   addProposal: (proposal: Proposal) => void;
   updateProposalStatus: (id: string, status: Proposal["status"]) => void;
   setGlobalError: (error: string | null) => void;
+  newSession: (blockId: string) => void;  // generate new session + clear AI messages
 }
 
 const initialSession: SessionState = {
@@ -140,4 +141,15 @@ export const usePostStore = create<PostStore>((set) => ({
 
   setGlobalError: (error) =>
     set((state) => ({ session: { ...state.session, globalError: error } })),
+
+  newSession: (blockId) =>
+    set((state) => {
+      const block = state.codeBlocks[blockId];
+      return {
+        session: { ...initialSession, sessionId: crypto.randomUUID() },
+        codeBlocks: block
+          ? { ...state.codeBlocks, [blockId]: { ...block, aiMessages: [] } }
+          : state.codeBlocks,
+      };
+    }),
 }));

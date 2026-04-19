@@ -30,6 +30,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
   const addProposal = usePostStore((s) => s.addProposal);
   const updateProposalStatus = usePostStore((s) => s.updateProposalStatus);
   const setOutput = usePostStore((s) => s.setOutput);
+  const newSession = usePostStore((s) => s.newSession);
 
   const abortRef = useRef<AbortController | null>(null);
 
@@ -59,10 +60,20 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const currentSessionId = usePostStore.getState().session.sessionId;
+      // Frontend controls session_id: generate one if not exists
+      let currentSessionId = usePostStore.getState().session.sessionId;
+      if (!currentSessionId) {
+        currentSessionId = crypto.randomUUID();
+        setSessionId(currentSessionId);
+      }
 
-      // Always send article_ctx when there's no session yet
-      const articleCtx = !currentSessionId
+      // Always send article_ctx with session_id (backend uses reset mode: hasSession && hasArticle)
+      // On first message this creates the session; on subsequent messages backend continues it
+
+      // Send article_ctx on first message (no messages yet) to create session
+      const messages = usePostStore.getState().codeBlocks[blockId]?.aiMessages ?? [];
+      const isFirstMessage = messages.length <= 2; // just added user + ai placeholder
+      const articleCtx = isFirstMessage
         ? { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks }
         : undefined;
 
@@ -71,7 +82,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
       try {
         await chatWithAgent(
           {
-            session_id: currentSessionId ?? "",
+            session_id: currentSessionId,
             user_message: text,
             article_ctx: articleCtx,
           },
@@ -168,10 +179,25 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
     { label: "🧪 测试", prompt: "请为这段代码生成边界测试用例" },
   ];
 
+  const handleNewSession = useCallback(() => {
+    if (session.isStreaming) return;
+    newSession(blockId);
+  }, [session.isStreaming, newSession, blockId]);
+
   return (
     <div className="flex flex-col h-full bg-surface-0">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-        <span className="text-xs text-text-title font-medium">🤖 AI 助手</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-text-title font-medium">🤖 AI 助手</span>
+          <button
+            onClick={handleNewSession}
+            disabled={isStreaming || messages.length === 0}
+            className="text-[10px] px-1.5 py-0.5 rounded bg-surface-3 text-text-placeholder hover:text-accent hover:bg-surface-2 transition-colors disabled:opacity-30"
+            title="开启新对话"
+          >
+            + 新对话
+          </button>
+        </div>
         <div className="flex gap-1">
           {shortcuts.map((s) => (
             <button
