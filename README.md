@@ -116,7 +116,7 @@ content/                        # 博客内容
 
 - Node.js >= 20
 - npm
-- CodeRunner 后端服务已运行（默认地址 `http://localhost:7979`）
+- CodeRunner 后端服务已运行（本地默认 `http://localhost:50012`，生产 `http://your-server:7979`）
 
 ### 安装步骤
 
@@ -142,7 +142,7 @@ cp .env.local.example .env.local
 
 ```bash
 # 后端 API 地址
-NEXT_PUBLIC_API_BASE=http://localhost:7979
+NEXT_PUBLIC_API_BASE=http://localhost:50012
 ```
 
 4. 启动开发服务器：
