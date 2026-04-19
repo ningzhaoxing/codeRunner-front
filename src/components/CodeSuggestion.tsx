@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { usePostStore } from "@/store/usePostStore";
 import { usePlaygroundStore } from "@/store/usePlaygroundStore";
 import { confirmProposal } from "@/lib/api";
+import type { SSEEvent } from "@/lib/sse";
+import type { Proposal, ChatMessage } from "@/types";
+
+let confirmMsgId = 0;
+function nextConfirmMsgId() {
+  return `confirm-msg-${Date.now()}-${++confirmMsgId}`;
+}
 
 interface CodeSuggestionProps {
   proposalId: string;
@@ -27,6 +34,15 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
   const postUpdateProposalStatus = usePostStore((s) => s.updateProposalStatus);
   const playgroundUpdateProposalStatus = usePlaygroundStore((s) => s.updateProposalStatus);
   const updateProposalStatus = isPlayground ? playgroundUpdateProposalStatus : postUpdateProposalStatus;
+
+  // Store methods for handling confirm SSE events
+  const postAddMessage = usePostStore((s) => s.addAIMessage);
+  const postUpdateLastMessage = usePostStore((s) => s.updateLastAIMessage);
+  const postAddProposal = usePostStore((s) => s.addProposal);
+
+  const pgAddMessage = usePlaygroundStore((s) => s.addAIMessage);
+  const pgUpdateLastMessage = usePlaygroundStore((s) => s.updateLastAIMessage);
+  const pgAddProposal = usePlaygroundStore((s) => s.addProposal);
 
   const [remaining, setRemaining] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -67,11 +83,94 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
   const handleConfirm = async () => {
     if (!sessionId || isExpired || isConfirmed || confirming) return;
     setConfirming(true);
+    updateProposalStatus(proposalId, "confirmed");
+
+    // Add a placeholder AI message for the confirm response
+    const aiMsgId = nextConfirmMsgId();
+    const aiMsg: ChatMessage = {
+      id: aiMsgId,
+      blockId,
+      type: "ai",
+      content: "",
+      timestamp: Date.now(),
+    };
+
+    if (isPlayground) {
+      pgAddMessage(aiMsg);
+    } else {
+      postAddMessage(blockId, aiMsg);
+    }
+
+    let aiContent = "";
+
     try {
-      await confirmProposal(sessionId, proposalId);
-      updateProposalStatus(proposalId, "confirmed");
+      await confirmProposal(sessionId, proposalId, (event: SSEEvent) => {
+        if (event.type === "executing") {
+          // execution started, already marked as confirmed
+        } else if ((event.type === "chunk" || event.type === "content") && typeof event.content === "string") {
+          aiContent += event.content;
+          if (isPlayground) {
+            pgUpdateLastMessage(aiContent);
+          } else {
+            postUpdateLastMessage(blockId, aiContent);
+          }
+        } else if (event.type === "proposal") {
+          const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description: string } }).proposal;
+          const newProposal: Proposal = {
+            id: p.proposal_id,
+            blockId,
+            code: p.code,
+            language: p.language,
+            description: p.description,
+            createdAt: Date.now(),
+            expiresAt: Date.now() + 10 * 60 * 1000,
+            status: "pending",
+          };
+          if (isPlayground) {
+            pgAddProposal(newProposal);
+            pgAddMessage({
+              id: nextConfirmMsgId(),
+              blockId,
+              type: "proposal",
+              content: "",
+              proposalId: newProposal.id,
+              timestamp: Date.now(),
+            });
+          } else {
+            postAddProposal(newProposal);
+            postAddMessage(blockId, {
+              id: nextConfirmMsgId(),
+              blockId,
+              type: "proposal",
+              content: "",
+              proposalId: newProposal.id,
+              timestamp: Date.now(),
+            });
+          }
+        } else if (event.type === "error") {
+          const errMsg = (event.error as string) ?? "确认执行失败";
+          if (isPlayground) {
+            pgAddMessage({
+              id: nextConfirmMsgId(),
+              blockId,
+              type: "error",
+              content: errMsg,
+              timestamp: Date.now(),
+            });
+          } else {
+            postAddMessage(blockId, {
+              id: nextConfirmMsgId(),
+              blockId,
+              type: "error",
+              content: errMsg,
+              timestamp: Date.now(),
+            });
+          }
+        }
+      });
+      updateProposalStatus(proposalId, "executed");
     } catch {
-      // ignore
+      // ignore abort errors
     } finally {
       setConfirming(false);
     }
@@ -108,7 +207,7 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
           disabled={isExpired || isConfirmed || confirming}
           className="px-2 py-1 rounded bg-accent/20 text-accent hover:bg-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {isConfirmed ? "已确认" : confirming ? "确认中..." : "确认运行"}
+          {isConfirmed ? "已确认" : confirming ? "执行中..." : "确认运行"}
         </button>
       </div>
     </div>

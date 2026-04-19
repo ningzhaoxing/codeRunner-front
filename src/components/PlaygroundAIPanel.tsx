@@ -26,6 +26,7 @@ export default function PlaygroundAIPanel() {
   const updateLastAIMessage = usePlaygroundStore((s) => s.updateLastAIMessage);
   const setStreaming = usePlaygroundStore((s) => s.setStreaming);
   const setSessionId = usePlaygroundStore((s) => s.setSessionId);
+  const newAISession = usePlaygroundStore((s) => s.newAISession);
   const addProposal = usePlaygroundStore((s) => s.addProposal);
   const updateProposalStatus = usePlaygroundStore((s) => s.updateProposalStatus);
   const setOutput = usePlaygroundStore((s) => s.setOutput);
@@ -83,16 +84,11 @@ export default function PlaygroundAIPanel() {
           (event: SSEEvent) => {
             if ((event.type === "session" || event.type === "session_created") && typeof event.session_id === "string") {
               setSessionId(event.session_id);
-            } else if (event.type === "chunk" && typeof event.content === "string") {
+            } else if ((event.type === "chunk" || event.type === "content") && typeof event.content === "string") {
               aiContent += event.content;
               updateLastAIMessage(aiContent);
             } else if (event.type === "proposal") {
-              const p = event as unknown as {
-                proposal_id: string;
-                code: string;
-                language: string;
-                description: string;
-              };
+              const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description: string } }).proposal;
               const proposal: Proposal = {
                 id: p.proposal_id,
                 blockId: BLOCK_ID,
@@ -112,34 +108,12 @@ export default function PlaygroundAIPanel() {
                 proposalId: proposal.id,
                 timestamp: Date.now(),
               });
-            } else if (event.type === "execution_result") {
-              const execOutput = (event.output as string) ?? "";
-              const error = (event.error as string) ?? null;
-              setOutput(execOutput || null, error);
-              addAIMessage({
-                id: nextMsgId(),
-                blockId: BLOCK_ID,
-                type: "execution_result",
-                content: error ? `Error: ${error}` : execOutput,
-                timestamp: Date.now(),
-              });
-              if (typeof event.proposal_id === "string") {
-                updateProposalStatus(event.proposal_id as string, "executed");
-              }
-            } else if (event.type === "interrupted") {
-              addAIMessage({
-                id: nextMsgId(),
-                blockId: BLOCK_ID,
-                type: "interrupted",
-                content: "",
-                timestamp: Date.now(),
-              });
             } else if (event.type === "error") {
               addAIMessage({
                 id: nextMsgId(),
                 blockId: BLOCK_ID,
                 type: "error",
-                content: (event.message as string) ?? "未知错误",
+                content: (event.error as string) ?? "未知错误",
                 timestamp: Date.now(),
               });
             }
@@ -170,11 +144,16 @@ export default function PlaygroundAIPanel() {
     { label: "🧪 测试", prompt: "请为这段代码生成边界测试用例" },
   ];
 
+  const handleNewSession = useCallback(() => {
+    if (isStreaming) return;
+    newAISession();
+  }, [isStreaming, newAISession]);
+
   return (
     <div className="flex flex-col h-full bg-surface-0">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <span className="text-xs text-text-title font-medium">🤖 AI 助手</span>
-        <div className="flex gap-1">
+        <div className="flex items-center gap-1">
           {shortcuts.map((s) => (
             <button
               key={s.label}
@@ -185,6 +164,14 @@ export default function PlaygroundAIPanel() {
               {s.label}
             </button>
           ))}
+          <button
+            onClick={handleNewSession}
+            disabled={isStreaming || aiMessages.length === 0}
+            className="text-[11px] px-1.5 py-0.5 rounded bg-accent/20 text-accent hover:bg-accent/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="开启新对话"
+          >
+            ↻ 新对话
+          </button>
         </div>
       </div>
       <ChatMessages messages={aiMessages} blockId={BLOCK_ID} />

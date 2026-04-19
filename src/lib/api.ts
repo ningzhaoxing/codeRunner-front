@@ -36,12 +36,14 @@ export async function chatWithAgent(
 
 export async function confirmProposal(
   sessionId: string,
-  proposalId: string
-): Promise<{ request_id: string; status: string }> {
-  const res = await fetch(`${API_BASE}/agent/confirm`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId, proposal_id: proposalId }),
-  });
-  return res.json();
+  proposalId: string,
+  onEvent: (event: SSEEvent) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  await fetchSSE(
+    `${API_BASE}/agent/confirm`,
+    { session_id: sessionId, proposal_id: proposalId },
+    onEvent,
+    signal,
+  );
 }

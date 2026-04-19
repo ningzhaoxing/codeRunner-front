@@ -71,6 +71,7 @@ interface PlaygroundStore {
   setStreaming: (streaming: boolean) => void;
   addProposal: (proposal: Proposal) => void;
   updateProposalStatus: (id: string, status: Proposal["status"]) => void;
+  newAISession: () => void;
   initFromURL: (lang: SupportedLanguage, code: string) => void;
   loadFromStorage: () => void;
 }
@@ -165,6 +166,8 @@ export const usePlaygroundStore = create<PlaygroundStore>((set, get) => ({
       if (!p) return s;
       return { proposals: { ...s.proposals, [id]: { ...p, status } } };
     }),
+
+  newAISession: () => set({ aiMessages: [], sessionId: null, proposals: {}, isStreaming: false }),
 
   initFromURL: (lang, code) => {
     const validLang = SUPPORTED_LANGUAGES.includes(lang) ? lang : "go";
