@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { useOnboardingStore, shouldShowOnboarding } from "@/store/useOnboardingStore";
 import { ONBOARDING_STEPS } from "./steps";
 import OnboardingSpotlight from "./OnboardingSpotlight";
@@ -11,7 +12,8 @@ export default function OnboardingProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { isActive, currentStep, start, setTargetElement } = useOnboardingStore();
+  const { isActive, currentStep, start, next, setTargetElement } = useOnboardingStore();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (shouldShowOnboarding()) {
@@ -19,6 +21,17 @@ export default function OnboardingProvider({
       return () => clearTimeout(timer);
     }
   }, [start]);
+
+  // Auto-advance when user navigates to the expected route
+  useEffect(() => {
+    if (!isActive) return;
+    const step = ONBOARDING_STEPS[currentStep];
+    if (!step?.advanceOnRoute) return;
+
+    if (pathname.startsWith(step.advanceOnRoute)) {
+      next();
+    }
+  }, [isActive, currentStep, pathname, next]);
 
   const findTarget = useCallback(() => {
     if (!isActive) return;

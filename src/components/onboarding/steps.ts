@@ -3,8 +3,8 @@ export interface OnboardingStep {
   targetSelector: string;
   content: string;
   position: "top" | "bottom" | "left" | "right";
-  waitForAction?: boolean;
   route?: string;
+  advanceOnRoute?: string;
 }
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
@@ -15,13 +15,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       "👋 欢迎来到 CodeRunner！这里的代码块不只是展示，还能直接运行。点击这篇文章试试看 →",
     position: "bottom",
     route: "/",
+    advanceOnRoute: "/posts/",
   },
   {
     id: "run-code",
     targetSelector: '[data-onboarding-target="run-button"]',
     content: "▶️ 点击 Run 按钮执行代码，输出会实时显示在下方面板",
     position: "bottom",
-    waitForAction: true,
   },
   {
     id: "ai-assistant",
@@ -34,6 +34,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     targetSelector: '[data-onboarding-target="playground-link"]',
     content: "🎨 想自由编写代码？Playground 支持 5 种语言，代码自动保存",
     position: "bottom",
+    advanceOnRoute: "/playground",
   },
   {
     id: "complete",

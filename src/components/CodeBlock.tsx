@@ -158,7 +158,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
   if (isExpanded) {
     return (
       <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1 shadow-xl">
-        <div className="flex" style={{ minHeight: 400 }}>
+        <div className="flex" style={{ height: 600 }}>
           <div className="flex-[6] flex flex-col border-r border-border min-w-0">
             <CodeBlockHeader
               filename={langInfo.filename}
@@ -183,7 +183,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
             </div>
             <OutputPanel output={output} error={runError} isRunning={isRunning} />
           </div>
-          <div className="flex-[4] min-w-0">
+          <div className="flex-[4] min-w-0 overflow-hidden">
             <AIPanel
               blockId={blockId}
               articleId={articleId ?? ""}
