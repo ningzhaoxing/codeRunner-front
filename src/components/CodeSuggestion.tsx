@@ -105,23 +105,23 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
 
     try {
       await confirmProposal(sessionId, proposalId, (event: SSEEvent) => {
-        if (event.type === "executing") {
-          // execution started, already marked as confirmed
-        } else if ((event.type === "chunk" || event.type === "content") && typeof event.content === "string") {
+        if (event.type === "message" && typeof event.content === "string") {
+          // execution status message (e.g. "executing")
+        } else if (event.type === "stream_chunk" && typeof event.content === "string") {
           aiContent += event.content;
           if (isPlayground) {
             pgUpdateLastMessage(aiContent);
           } else {
             postUpdateLastMessage(blockId, aiContent);
           }
-        } else if (event.type === "proposal") {
-          const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description: string } }).proposal;
+        } else if (event.type === "interrupt") {
+          const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description?: string } }).proposal;
           const newProposal: Proposal = {
             id: p.proposal_id,
             blockId,
             code: p.code,
             language: p.language,
-            description: p.description,
+            description: p.description ?? "",
             createdAt: Date.now(),
             expiresAt: Date.now() + 10 * 60 * 1000,
             status: "pending",
@@ -181,7 +181,7 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
   return (
     <div className="rounded-lg border border-border bg-[#111122] overflow-hidden text-xs">
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface-2 border-b border-border">
-        <span className="text-text-secondary">{proposal.description}</span>
+        <span className="text-text-secondary">{proposal.description || "代码建议"}</span>
         <span className={`font-mono ${isExpired ? "text-error" : "text-accent"}`}>
           {remaining}
         </span>

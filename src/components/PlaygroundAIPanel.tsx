@@ -82,19 +82,30 @@ export default function PlaygroundAIPanel() {
             article_ctx: articleCtx,
           },
           (event: SSEEvent) => {
-            if ((event.type === "session" || event.type === "session_created") && typeof event.session_id === "string") {
+            if (event.type === "session_created" && typeof event.session_id === "string") {
               setSessionId(event.session_id);
-            } else if ((event.type === "chunk" || event.type === "content") && typeof event.content === "string") {
+            } else if (event.type === "stream_chunk" && typeof event.content === "string") {
               aiContent += event.content;
               updateLastAIMessage(aiContent);
-            } else if (event.type === "proposal") {
-              const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description: string } }).proposal;
+            } else if (event.type === "message" && typeof event.content === "string") {
+              aiContent += event.content;
+              updateLastAIMessage(aiContent);
+            } else if (event.type === "tool_result" && typeof event.content === "string") {
+              addAIMessage({
+                id: nextMsgId(),
+                blockId: BLOCK_ID,
+                type: "execution_result",
+                content: event.content,
+                timestamp: Date.now(),
+              });
+            } else if (event.type === "interrupt") {
+              const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description?: string } }).proposal;
               const proposal: Proposal = {
                 id: p.proposal_id,
                 blockId: BLOCK_ID,
                 code: p.code,
                 language: p.language,
-                description: p.description,
+                description: p.description ?? "",
                 createdAt: Date.now(),
                 expiresAt: Date.now() + 10 * 60 * 1000,
                 status: "pending",

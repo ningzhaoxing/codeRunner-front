@@ -33,7 +33,7 @@ export interface Proposal {
   blockId: string;
   code: string;
   language: string;
-  description: string;
+  description?: string;
   createdAt: number;
   expiresAt: number;
   status: "pending" | "confirmed" | "executed" | "expired";
