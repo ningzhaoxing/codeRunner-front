@@ -59,22 +59,23 @@ export default function PlaygroundAIPanel() {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const currentCode = usePlaygroundStore.getState().code;
-      const currentLang = usePlaygroundStore.getState().language;
-      const currentSessionId = usePlaygroundStore.getState().sessionId;
-
-      // Always send article_ctx when there's no session yet
-      const articleCtx = !currentSessionId
-        ? {
-            article_id: "",
-            article_content: "",
-            code_blocks: [{ language: currentLang, code: currentCode }],
-          }
-        : undefined;
-
       let aiContent = "";
 
       try {
+        const currentCode = usePlaygroundStore.getState().code;
+        const currentLang = usePlaygroundStore.getState().language;
+        const currentSessionId = usePlaygroundStore.getState().sessionId;
+
+        // Always send article_ctx when there's no session yet
+        const articleCtx = !currentSessionId
+          ? {
+              article_id: "",
+              article_content: "",
+              code_blocks: [{ language: currentLang, code: currentCode }],
+            }
+          : undefined;
+
+
         await chatWithAgent(
           {
             session_id: currentSessionId ?? "",

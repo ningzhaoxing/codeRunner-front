@@ -60,26 +60,27 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
       const controller = new AbortController();
       abortRef.current = controller;
 
-      // Frontend controls session_id: generate one if not exists
-      let currentSessionId = usePostStore.getState().session.sessionId;
-      if (!currentSessionId) {
-        currentSessionId = crypto.randomUUID();
-        setSessionId(currentSessionId);
-      }
-
-      // Always send article_ctx with session_id (backend uses reset mode: hasSession && hasArticle)
-      // On first message this creates the session; on subsequent messages backend continues it
-
-      // Send article_ctx on first message (no messages yet) to create session
-      const messages = usePostStore.getState().codeBlocks[blockId]?.aiMessages ?? [];
-      const isFirstMessage = messages.length <= 2; // just added user + ai placeholder
-      const articleCtx = isFirstMessage
-        ? { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks }
-        : undefined;
-
       let aiContent = "";
 
       try {
+        // Frontend controls session_id: generate one if not exists
+        let currentSessionId = usePostStore.getState().session.sessionId;
+        if (!currentSessionId) {
+          currentSessionId = crypto.randomUUID();
+          setSessionId(currentSessionId);
+        }
+
+        // Always send article_ctx with session_id (backend uses reset mode: hasSession && hasArticle)
+        // On first message this creates the session; on subsequent messages backend continues it
+
+        // Send article_ctx on first message (no messages yet) to create session
+        const messages = usePostStore.getState().codeBlocks[blockId]?.aiMessages ?? [];
+        const isFirstMessage = messages.length <= 2; // just added user + ai placeholder
+        const articleCtx = isFirstMessage
+          ? { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks }
+          : undefined;
+
+
         await chatWithAgent(
           {
             session_id: currentSessionId,

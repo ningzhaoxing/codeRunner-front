@@ -146,7 +146,7 @@ export const usePostStore = create<PostStore>((set) => ({
     set((state) => {
       const block = state.codeBlocks[blockId];
       return {
-        session: { ...initialSession, sessionId: crypto.randomUUID() },
+        session: { ...initialSession, sessionId: `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}` },
         codeBlocks: block
           ? { ...state.codeBlocks, [blockId]: { ...block, aiMessages: [] } }
           : state.codeBlocks,
