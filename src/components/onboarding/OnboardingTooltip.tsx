@@ -92,7 +92,7 @@ export default function OnboardingTooltip() {
 
   return (
     <div
-      className="fixed z-[9999] bg-msg-ai border border-surface-3 rounded-lg p-4 shadow-2xl max-w-[320px]"
+      className="fixed z-[9999] bg-msg-ai border border-surface-3 rounded-lg p-4 shadow-2xl max-w-[320px] pointer-events-auto"
       style={position}
     >
       <div className="flex gap-1 mb-3">
