@@ -1,17 +1,20 @@
 "use client";
 
 import { useOnboardingStore, shouldShowOnboarding } from "@/store/useOnboardingStore";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function OnboardingTrigger() {
   const { start } = useOnboardingStore();
+  const pathname = usePathname();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     setShow(!shouldShowOnboarding());
   }, []);
 
-  if (!show) return null;
+  // Only show on homepage to avoid interrupting article reading
+  if (!show || pathname !== "/") return null;
 
   return (
     <button
