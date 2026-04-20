@@ -209,6 +209,14 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
             </button>
           ))}
           <button
+            onClick={handleCancel}
+            disabled={!isStreaming}
+            className="text-[11px] px-1.5 py-0.5 rounded bg-error/20 text-error hover:bg-error/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="取消执行"
+          >
+            ⏹ 取消
+          </button>
+          <button
             onClick={handleNewSession}
             disabled={isStreaming || messages.length === 0}
             className="text-[11px] px-1.5 py-0.5 rounded bg-accent/20 text-accent hover:bg-accent/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"

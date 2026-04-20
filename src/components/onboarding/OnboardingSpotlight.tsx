@@ -51,7 +51,7 @@ export default function OnboardingSpotlight() {
 
   return (
     <div
-      className="fixed inset-0 z-[9998] pointer-events-auto"
+      className="fixed inset-0 z-[9998] pointer-events-none"
       style={{ background: "transparent" }}
     >
       <div

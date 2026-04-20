@@ -2,7 +2,7 @@
 
 import { useCallback, useRef } from "react";
 import { usePlaygroundStore } from "@/store/usePlaygroundStore";
-import { chatWithAgent } from "@/lib/api";
+import { chatWithAgent, cancelAgent } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
 import type { Proposal, ChatMessage } from "@/types";
 import ChatMessages from "./ChatMessages";
@@ -161,6 +161,29 @@ export default function PlaygroundAIPanel() {
     newAISession();
   }, [isStreaming, newAISession]);
 
+  const handleCancel = useCallback(async () => {
+    if (!isStreaming || !sessionId) return;
+
+    // Abort SSE connection
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+
+    // Call backend cancel API
+    try {
+      await cancelAgent(sessionId);
+      addAIMessage({
+        id: nextMsgId(),
+        blockId: BLOCK_ID,
+        type: "system",
+        content: "已取消执行",
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      // Ignore cancel errors (404 if no active run is fine)
+    }
+  }, [isStreaming, sessionId, addAIMessage]);
+
   return (
     <div className="flex flex-col h-full bg-surface-0">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
@@ -176,6 +199,14 @@ export default function PlaygroundAIPanel() {
               {s.label}
             </button>
           ))}
+          <button
+            onClick={handleCancel}
+            disabled={!isStreaming}
+            className="text-[11px] px-1.5 py-0.5 rounded bg-error/20 text-error hover:bg-error/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="取消执行"
+          >
+            ⏹ 取消
+          </button>
           <button
             onClick={handleNewSession}
             disabled={isStreaming || aiMessages.length === 0}
