@@ -16,6 +16,26 @@ export default function OnboardingSpotlight() {
   const { isActive, targetElement } = useOnboardingStore();
   const [rect, setRect] = useState<Rect | null>(null);
 
+  // Elevate target element above the overlay so it's naturally clickable
+  useEffect(() => {
+    if (!isActive || !targetElement) return;
+
+    const prev = {
+      position: targetElement.style.position,
+      zIndex: targetElement.style.zIndex,
+      borderRadius: targetElement.style.borderRadius,
+    };
+
+    targetElement.style.position = "relative";
+    targetElement.style.zIndex = "9999";
+
+    return () => {
+      targetElement.style.position = prev.position;
+      targetElement.style.zIndex = prev.zIndex;
+      targetElement.style.borderRadius = prev.borderRadius;
+    };
+  }, [isActive, targetElement]);
+
   useEffect(() => {
     if (!isActive || !targetElement) {
       setRect(null);

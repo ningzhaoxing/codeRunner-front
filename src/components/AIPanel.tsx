@@ -36,6 +36,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
 
   const sendMessage = useCallback(
     async (text: string) => {
+      console.log("[AIPanel] sendMessage called, isStreaming:", session.isStreaming);
       if (session.isStreaming) return;
 
       const userMsg: ChatMessage = {
@@ -69,6 +70,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
           currentSessionId = crypto.randomUUID();
           setSessionId(currentSessionId);
         }
+        console.log("[AIPanel] about to fetch, sessionId:", currentSessionId);
 
         // Always send article_ctx with session_id (backend uses reset mode: hasSession && hasArticle)
         // On first message this creates the session; on subsequent messages backend continues it
