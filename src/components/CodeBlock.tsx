@@ -126,6 +126,10 @@ export default function CodeBlock({ blockId, blockIndex, code, language, article
   const handleRun = async () => {
     if (isRunning) return;
 
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("onboarding:code-ran"));
+    }
+
     setOutput(blockId, null, null);
     setRunning(blockId, true);
 
@@ -141,7 +145,13 @@ export default function CodeBlock({ blockId, blockIndex, code, language, article
   };
 
   const handleToggleAI = () => {
-    setShowAI((v) => !v);
+    setShowAI((v) => {
+      const nextVal = !v;
+      if (nextVal && typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("onboarding:ai-opened"));
+      }
+      return nextVal;
+    });
   };
 
   const handleToggleExpand = () => {

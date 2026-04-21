@@ -14,6 +14,9 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("onboarding:ai-message-sent"));
+    }
     onSend(trimmed);
     setText("");
     if (textareaRef.current) {
@@ -36,7 +39,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   };
 
   return (
-    <div className="flex items-end gap-1.5 px-3 py-2 border-t border-border">
+    <div className="flex items-end gap-1.5 px-3 py-2 border-t border-border" data-onboarding-target="ai-input">
       <textarea
         ref={textareaRef}
         value={text}

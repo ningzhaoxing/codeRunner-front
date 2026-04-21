@@ -33,6 +33,17 @@ export default function OnboardingProvider({
     }
   }, [isActive, currentStep, pathname, next]);
 
+  // Auto-advance when a custom DOM event fires (e.g. user clicked Run, opened AI panel, sent message)
+  useEffect(() => {
+    if (!isActive) return;
+    const step = ONBOARDING_STEPS[currentStep];
+    if (!step?.advanceOnEvent) return;
+
+    const handler = () => next();
+    window.addEventListener(step.advanceOnEvent, handler);
+    return () => window.removeEventListener(step.advanceOnEvent!, handler);
+  }, [isActive, currentStep, next]);
+
   const findTarget = useCallback(() => {
     if (!isActive) return;
     const step = ONBOARDING_STEPS[currentStep];

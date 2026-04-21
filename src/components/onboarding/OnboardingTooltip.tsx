@@ -119,9 +119,9 @@ export default function OnboardingTooltip() {
             跳过
           </button>
         )}
-        {step.advanceOnRoute ? (
+        {step.advanceOnRoute || step.advanceOnEvent ? (
           <span className="px-4 py-1.5 text-sm text-text-disabled italic">
-            点击后自动继续 →
+            {step.advanceOnRoute ? "点击后自动继续 →" : "完成操作后自动继续 →"}
           </span>
         ) : (
           <button

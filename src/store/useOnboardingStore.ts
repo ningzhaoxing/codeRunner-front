@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { ONBOARDING_STEPS } from "@/components/onboarding/steps";
 
 const STORAGE_KEY = "coderunner-onboarding-completed";
 
@@ -19,7 +20,7 @@ interface OnboardingStore {
 export const useOnboardingStore = create<OnboardingStore>((set) => ({
   isActive: false,
   currentStep: 0,
-  totalSteps: 5,
+  totalSteps: ONBOARDING_STEPS.length,
   targetElement: null,
 
   start: () => {

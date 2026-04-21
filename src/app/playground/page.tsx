@@ -52,6 +52,7 @@ function PlaygroundContent() {
 
     const langParam = searchParams.get("lang");
     const codeParam = searchParams.get("code");
+    const restoreParam = searchParams.get("restore");
 
     if (langParam && codeParam) {
       const decoded = decodeCode(codeParam);
@@ -60,6 +61,23 @@ function PlaygroundContent() {
           ? (langParam as SupportedLanguage)
           : "go";
         initFromURL(validLang, decoded);
+
+        // Restore session from CodeBlock if restore=1
+        if (restoreParam === "1") {
+          try {
+            const stored = sessionStorage.getItem("playground-session-transfer");
+            if (stored) {
+              const { sessionId, messages } = JSON.parse(stored);
+              usePlaygroundStore.setState({
+                sessionId,
+                aiMessages: messages,
+              });
+              sessionStorage.removeItem("playground-session-transfer");
+            }
+          } catch (err) {
+            console.error("Failed to restore session:", err);
+          }
+        }
         return;
       } else {
         alert("分享链接中的代码解码失败，已加载本地存储");
