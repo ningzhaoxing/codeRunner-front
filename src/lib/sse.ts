@@ -51,7 +51,7 @@ export async function fetchSSE(
 
           // If there was an "event:" line, use it as type (overrides data.type if present)
           if (currentEvent) {
-            onEvent({ type: currentEvent, ...data } as SSEEvent);
+            onEvent({ ...data, type: currentEvent } as SSEEvent);
             currentEvent = "";
           } else {
             // Otherwise use data.type from payload
