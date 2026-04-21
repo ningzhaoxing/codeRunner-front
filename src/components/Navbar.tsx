@@ -24,6 +24,7 @@ export default function Navbar() {
           <Link href="/playground" className={linkClass("/playground")} data-onboarding-target="playground-link">Playground</Link>
           <Link href="/tags" className={linkClass("/tags")}>标签</Link>
           <Link href="/about" className={linkClass("/about")}>关于</Link>
+          <Link href="/feedback" className={linkClass("/feedback")}>反馈</Link>
           <OnboardingTrigger />
         </div>
       </div>
