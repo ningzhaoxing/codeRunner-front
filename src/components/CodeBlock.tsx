@@ -34,6 +34,7 @@ function handleEditorMount(_editor: unknown, monaco: { languages: { typescript: 
 
 interface CodeBlockProps {
   blockId: string;
+  blockIndex?: number;
   code: string;
   language: string;
   articleId?: string;
@@ -68,7 +69,7 @@ function resolveLanguage(lang: string): LangInfo {
   }
 }
 
-export default function CodeBlock({ blockId, code, language, articleId, articleContent, allCodeBlocks }: CodeBlockProps) {
+export default function CodeBlock({ blockId, blockIndex, code, language, articleId, articleContent, allCodeBlocks }: CodeBlockProps) {
   const langInfo = useMemo(() => resolveLanguage(language), [language]);
 
   const block = usePostStore((s) => s.codeBlocks[blockId]);
@@ -193,6 +194,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
           <div className="flex-[4] min-w-0 overflow-hidden">
             <AIPanel
               blockId={blockId}
+              blockIndex={blockIndex}
               articleId={articleId ?? ""}
               articleContent={articleContent ?? ""}
               allCodeBlocks={allCodeBlocks ?? []}

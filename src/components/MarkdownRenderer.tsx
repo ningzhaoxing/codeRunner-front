@@ -53,11 +53,13 @@ export default function MarkdownRenderer({ content, articleId, articleContent }:
         const isBlock = Boolean(className?.startsWith("language-"));
         if (isBlock) {
           const lang = className?.replace("language-", "") || "text";
-          const blockId = `${articleId || "post"}-block-${blockCounterRef.current++}`;
+          const blockIndex = blockCounterRef.current++;
+          const blockId = `${articleId || "post"}-block-${blockIndex}`;
           const codeText = String(children).replace(/\n$/, "");
           return (
             <CodeBlock
               blockId={blockId}
+              blockIndex={blockIndex}
               code={codeText}
               language={lang}
               articleId={articleId}

@@ -10,6 +10,7 @@ import ChatInput from "./ChatInput";
 
 interface AIPanelProps {
   blockId: string;
+  blockIndex?: number;
   articleId: string;
   articleContent: string;
   allCodeBlocks: { language: string; code: string }[];
@@ -20,7 +21,7 @@ function nextMsgId() {
   return `msg-${Date.now()}-${++msgIdCounter}`;
 }
 
-export default function AIPanel({ blockId, articleId, articleContent, allCodeBlocks }: AIPanelProps) {
+export default function AIPanel({ blockId, blockIndex, articleId, articleContent, allCodeBlocks }: AIPanelProps) {
   const block = usePostStore((s) => s.codeBlocks[blockId]);
   const session = usePostStore((s) => s.session);
   const addAIMessage = usePostStore((s) => s.addAIMessage);
@@ -76,7 +77,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
           {
             session_id: currentSessionId ?? "",
             user_message: text,
-            article_ctx: { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks },
+            article_ctx: { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks, focused_block_index: blockIndex },
           },
           (event: SSEEvent) => {
             if (event.type === "session_created" && typeof event.session_id === "string") {
@@ -125,7 +126,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
         abortRef.current = null;
       }
     },
-    [blockId, articleId, articleContent, allCodeBlocks, session.isStreaming, addAIMessage, updateLastAIMessage, setStreaming, setSessionId, addProposal]
+    [blockId, blockIndex, articleId, articleContent, allCodeBlocks, session.isStreaming, addAIMessage, updateLastAIMessage, setStreaming, setSessionId, addProposal]
   );
 
   const messages = block?.aiMessages ?? [];

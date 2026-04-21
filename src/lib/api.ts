@@ -27,6 +27,7 @@ export async function chatWithAgent(
       article_id: string;
       article_content: string;
       code_blocks: { language: string; code: string }[];
+      focused_block_index?: number;
     };
   },
   onEvent: (event: SSEEvent) => void,
