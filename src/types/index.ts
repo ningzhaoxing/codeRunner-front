@@ -22,6 +22,7 @@ export interface CodeBlockState {
 export interface SessionState {
   sessionId: string | null;
   activeBlockId: string | null;
+  articleId: string | null;
   isStreaming: boolean;
   sseConnected: boolean;
   proposals: Record<string, Proposal>;

@@ -31,6 +31,7 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
   const addProposal = usePostStore((s) => s.addProposal);
   const newSession = usePostStore((s) => s.newSession);
   const loadPersistedSession = usePostStore((s) => s.loadPersistedSession);
+  const loadPersistedProposals = usePostStore((s) => s.loadPersistedProposals);
 
   const abortRef = useRef<AbortController | null>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
@@ -47,7 +48,8 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
       const saved = loadPersistedSession(articleId);
       if (saved) setSessionId(saved, articleId);
     }
-  }, [articleId, setSessionId, loadPersistedSession]);
+    loadPersistedProposals(articleId);
+  }, [articleId, setSessionId, loadPersistedSession, loadPersistedProposals]);
 
   const sendMessage = useCallback(
     async (text: string) => {

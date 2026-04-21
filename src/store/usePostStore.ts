@@ -5,6 +5,7 @@ import { CodeBlockState, SessionState, Proposal, ChatMessage } from "@/types";
 
 const SESSION_KEY = (articleId: string) => `cr_post_session_${articleId}`;
 const MESSAGES_KEY = (articleId: string) => `cr_post_messages_${articleId}`;
+const PROPOSALS_KEY = (articleId: string) => `cr_post_proposals_${articleId}`;
 
 function saveSession(articleId: string, sessionId: string | null) {
   if (typeof window === "undefined" || !articleId) return;
@@ -36,10 +37,29 @@ function loadMessages(articleId: string, blockId: string): ChatMessage[] {
   } catch { return []; }
 }
 
+function saveProposals(articleId: string, proposals: Record<string, Proposal>) {
+  if (typeof window === "undefined" || !articleId) return;
+  try {
+    localStorage.setItem(PROPOSALS_KEY(articleId), JSON.stringify(proposals));
+  } catch { /* localStorage full — ignore */ }
+}
+
+function loadProposals(articleId: string): Record<string, Proposal> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(PROPOSALS_KEY(articleId));
+    if (!raw) return {};
+    return JSON.parse(raw) as Record<string, Proposal>;
+  } catch {
+    return {};
+  }
+}
+
 function clearPersistedSession(articleId: string) {
   if (typeof window === "undefined") return;
   localStorage.removeItem(SESSION_KEY(articleId));
   localStorage.removeItem(MESSAGES_KEY(articleId));
+  localStorage.removeItem(PROPOSALS_KEY(articleId));
 }
 
 interface PostStore {
@@ -64,11 +84,13 @@ interface PostStore {
   setGlobalError: (error: string | null) => void;
   newSession: (blockId: string, articleId?: string) => void;
   loadPersistedSession: (articleId: string) => string | null;
+  loadPersistedProposals: (articleId: string) => void;
 }
 
 const initialSession: SessionState = {
   sessionId: null,
   activeBlockId: null,
+  articleId: null,
   isStreaming: false,
   sseConnected: false,
   proposals: {},
@@ -82,9 +104,20 @@ export const usePostStore = create<PostStore>((set) => ({
   initCodeBlock: (blockId, code, language, articleId) =>
     set((state) => {
       const existing = state.codeBlocks[blockId];
-      if (existing) return state;
       const persisted = articleId ? loadMessages(articleId, blockId) : [];
+      const storedProposals = articleId ? loadProposals(articleId) : {};
+      const nextSession = articleId
+        ? {
+            ...state.session,
+            articleId,
+            proposals: { ...storedProposals, ...state.session.proposals },
+          }
+        : state.session;
+      if (existing) {
+        return nextSession === state.session ? state : { session: nextSession };
+      }
       return {
+        session: nextSession,
         codeBlocks: {
           ...state.codeBlocks,
           [blockId]: {
@@ -164,7 +197,13 @@ export const usePostStore = create<PostStore>((set) => ({
 
   setSessionId: (id, articleId) => {
     if (articleId) saveSession(articleId, id);
-    set((state) => ({ session: { ...state.session, sessionId: id } }));
+    set((state) => ({
+      session: {
+        ...state.session,
+        sessionId: id,
+        articleId: articleId ?? state.session.articleId,
+      },
+    }));
   },
 
   setActiveBlockId: (id) =>
@@ -174,23 +213,27 @@ export const usePostStore = create<PostStore>((set) => ({
     set((state) => ({ session: { ...state.session, isStreaming: streaming } })),
 
   addProposal: (proposal) =>
-    set((state) => ({
-      session: {
-        ...state.session,
-        proposals: { ...state.session.proposals, [proposal.id]: proposal },
-      },
-    })),
+    set((state) => {
+      const proposals = { ...state.session.proposals, [proposal.id]: proposal };
+      if (state.session.articleId) saveProposals(state.session.articleId, proposals);
+      return {
+        session: { ...state.session, proposals },
+      };
+    }),
 
   updateProposalStatus: (id, status) =>
-    set((state) => ({
-      session: {
-        ...state.session,
-        proposals: {
-          ...state.session.proposals,
-          [id]: { ...state.session.proposals[id], status },
-        },
-      },
-    })),
+    set((state) => {
+      const existing = state.session.proposals[id];
+      if (!existing) return state;
+      const proposals = {
+        ...state.session.proposals,
+        [id]: { ...existing, status },
+      };
+      if (state.session.articleId) saveProposals(state.session.articleId, proposals);
+      return {
+        session: { ...state.session, proposals },
+      };
+    }),
 
   setGlobalError: (error) =>
     set((state) => ({ session: { ...state.session, globalError: error } })),
@@ -200,7 +243,7 @@ export const usePostStore = create<PostStore>((set) => ({
       if (articleId) clearPersistedSession(articleId);
       const block = state.codeBlocks[blockId];
       return {
-        session: { ...initialSession, sessionId: null },
+        session: { ...initialSession, articleId: articleId ?? null },
         codeBlocks: block
           ? { ...state.codeBlocks, [blockId]: { ...block, aiMessages: [] } }
           : state.codeBlocks,
@@ -208,4 +251,18 @@ export const usePostStore = create<PostStore>((set) => ({
     }),
 
   loadPersistedSession: (articleId) => loadSession(articleId),
+
+  loadPersistedProposals: (articleId) =>
+    set((state) => {
+      if (!articleId) return state;
+      const stored = loadProposals(articleId);
+      const merged = { ...stored, ...state.session.proposals };
+      return {
+        session: {
+          ...state.session,
+          articleId,
+          proposals: merged,
+        },
+      };
+    }),
 }));
