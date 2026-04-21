@@ -5,6 +5,7 @@ interface CodeBlockHeaderProps {
   language: string;
   isRunning: boolean;
   isExpanded: boolean;
+  showAI?: boolean;
   onRun: () => void;
   onToggleAI: () => void;
   onToggleExpand: () => void;
@@ -16,6 +17,7 @@ export default function CodeBlockHeader({
   language,
   isRunning,
   isExpanded,
+  showAI,
   onRun,
   onToggleAI,
   onToggleExpand,
@@ -39,7 +41,7 @@ export default function CodeBlockHeader({
         </button>
         <button
           onClick={onToggleAI}
-          className="hover:bg-surface-3 px-1.5 py-0.5 rounded text-xs transition-colors"
+          className={`px-1.5 py-0.5 rounded text-xs transition-colors ${showAI ? "bg-accent/20 text-accent" : "hover:bg-surface-3"}`}
           title="AI Assistant"
           data-onboarding-target="ai-button"
         >

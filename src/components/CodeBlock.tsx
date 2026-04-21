@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { usePostStore } from "@/store/usePostStore";
@@ -72,6 +72,8 @@ function resolveLanguage(lang: string): LangInfo {
 export default function CodeBlock({ blockId, blockIndex, code, language, articleId, articleContent, allCodeBlocks }: CodeBlockProps) {
   const langInfo = useMemo(() => resolveLanguage(language), [language]);
 
+  const [showAI, setShowAI] = useState(false);
+
   const block = usePostStore((s) => s.codeBlocks[blockId]);
   const session = usePostStore((s) => s.session);
   const initCodeBlock = usePostStore((s) => s.initCodeBlock);
@@ -139,8 +141,7 @@ export default function CodeBlock({ blockId, blockIndex, code, language, article
   };
 
   const handleToggleAI = () => {
-    // AI panel toggle — wired in Task 7. For now, reuse the expanded flag.
-    setExpanded(blockId, !isExpanded);
+    setShowAI((v) => !v);
   };
 
   const handleToggleExpand = () => {
@@ -165,14 +166,15 @@ export default function CodeBlock({ blockId, blockIndex, code, language, article
 
   if (isExpanded) {
     return (
-      <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1 shadow-xl">
-        <div className="flex" style={{ height: 600 }}>
-          <div className="flex-[6] flex flex-col border-r border-border min-w-0">
+      <>
+        <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1 shadow-xl">
+          <div className="flex flex-col" style={{ height: 600 }}>
             <CodeBlockHeader
               filename={langInfo.filename}
               language={langInfo.label}
               isRunning={isRunning}
               isExpanded={true}
+              showAI={showAI}
               onRun={handleRun}
               onToggleAI={handleToggleAI}
               onToggleExpand={handleToggleExpand}
@@ -191,7 +193,9 @@ export default function CodeBlock({ blockId, blockIndex, code, language, article
             </div>
             <OutputPanel output={output} error={runError} isRunning={isRunning} />
           </div>
-          <div className="flex-[4] min-w-0 overflow-hidden">
+        </div>
+        {showAI && (
+          <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1" style={{ height: 480 }}>
             <AIPanel
               blockId={blockId}
               blockIndex={blockIndex}
@@ -200,34 +204,48 @@ export default function CodeBlock({ blockId, blockIndex, code, language, article
               allCodeBlocks={allCodeBlocks ?? []}
             />
           </div>
-        </div>
-      </div>
+        )}
+      </>
     );
   }
 
   return (
-    <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1">
-      <CodeBlockHeader
-        filename={langInfo.filename}
-        language={langInfo.label}
-        isRunning={isRunning}
-        isExpanded={isExpanded}
-        onRun={handleRun}
-        onToggleAI={handleToggleAI}
-        onToggleExpand={handleToggleExpand}
-        onOpenPlayground={handleOpenPlayground}
-      />
-      <div style={{ height: editorHeight }}>
-        <Editor
-          height="100%"
-          language={langInfo.monacoLang}
-          value={currentCode}
-          onChange={handleEditorChange}
-          theme="vs-dark"
-          options={editorOptions}
+    <>
+      <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1">
+        <CodeBlockHeader
+          filename={langInfo.filename}
+          language={langInfo.label}
+          isRunning={isRunning}
+          isExpanded={isExpanded}
+          showAI={showAI}
+          onRun={handleRun}
+          onToggleAI={handleToggleAI}
+          onToggleExpand={handleToggleExpand}
+          onOpenPlayground={handleOpenPlayground}
         />
+        <div style={{ height: editorHeight }}>
+          <Editor
+            height="100%"
+            language={langInfo.monacoLang}
+            value={currentCode}
+            onChange={handleEditorChange}
+            theme="vs-dark"
+            options={editorOptions}
+          />
+        </div>
+        <OutputPanel output={output} error={runError} isRunning={isRunning} />
       </div>
-      <OutputPanel output={output} error={runError} isRunning={isRunning} />
-    </div>
+      {showAI && (
+        <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1" style={{ height: 480 }}>
+          <AIPanel
+            blockId={blockId}
+            blockIndex={blockIndex}
+            articleId={articleId ?? ""}
+            articleContent={articleContent ?? ""}
+            allCodeBlocks={allCodeBlocks ?? []}
+          />
+        </div>
+      )}
+    </>
   );
 }
