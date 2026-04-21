@@ -44,11 +44,20 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     advanceOnEvent: "onboarding:ai-message-sent",
   },
   {
-    id: "ai-confirm",
-    targetSelector: '[data-onboarding-target="ai-input"]',
+    id: "ai-wait-proposal",
+    targetSelector: '[data-onboarding-target="ai-chat-area"]',
     content:
-      "✅ Agent 会先流式解释它补了什么，然后提议执行 —— 注意这里的关键设计：不需要点按钮，回一句「好的」或「运行」它就识别意图执行，stdout 实时回流。\n\n试试基于真实输出继续追问：「为什么三次 fetching 顺序不一样？」",
+      "⏳ 现在先等 Agent 工作一下。它不会直接运行代码，而是会先把缺失的 package / import / main 补齐，再在聊天区里发出一张『执行提议』卡片。\n\n👉 等 proposal 出现后会自动进入下一步",
     position: "left",
+    advanceOnEvent: "onboarding:proposal-shown",
+  },
+  {
+    id: "ai-confirm",
+    targetSelector: '[data-onboarding-target="proposal-confirm-button"]',
+    content:
+      "✅ 这就是关键的 HITL（Human in the Loop）步骤：Agent 先提议，你来决定是否真的执行。现在点击这个『确认运行』按钮，把补全后的代码送进沙箱运行。\n\n👉 点击确认运行后会自动进入下一步",
+    position: "left",
+    advanceOnEvent: "onboarding:proposal-confirmed",
   },
   {
     id: "playground",

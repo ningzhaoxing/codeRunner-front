@@ -30,7 +30,7 @@ export default function ChatMessages({ messages, blockId }: ChatMessagesProps) {
   }
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
+    <div ref={containerRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-3" data-onboarding-target="ai-chat-area">
       {messages.map((msg) => (
         <MessageBubble key={msg.id} message={msg} blockId={blockId} />
       ))}

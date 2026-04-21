@@ -67,6 +67,12 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
     return () => clearInterval(id);
   }, [proposal, proposalId, updateProposalStatus]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("onboarding:proposal-shown"));
+    }
+  }, []);
+
   if (!proposal) return null;
 
   const isExpired = proposal.status === "expired";
@@ -82,6 +88,9 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
 
   const handleConfirm = async () => {
     if (!sessionId || isExpired || isConfirmed || confirming) return;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("onboarding:proposal-confirmed"));
+    }
     setConfirming(true);
     updateProposalStatus(proposalId, "confirmed");
 
@@ -205,6 +214,7 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
         <button
           onClick={handleConfirm}
           disabled={isExpired || isConfirmed || confirming}
+          data-onboarding-target="proposal-confirm-button"
           className="px-2 py-1 rounded bg-accent/20 text-accent hover:bg-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isConfirmed ? "已确认" : confirming ? "执行中..." : "确认运行"}
