@@ -119,12 +119,18 @@ export default function OnboardingTooltip() {
             跳过
           </button>
         )}
-        <button
-          onClick={isLastStep ? complete : next}
-          className="px-4 py-1.5 text-sm bg-accent text-surface-0 rounded hover:bg-accent/90 transition-colors font-medium"
-        >
-          {isLastStep ? "完成" : "下一步"}
-        </button>
+        {step.advanceOnRoute ? (
+          <span className="px-4 py-1.5 text-sm text-text-disabled italic">
+            点击后自动继续 →
+          </span>
+        ) : (
+          <button
+            onClick={isLastStep ? complete : next}
+            className="px-4 py-1.5 text-sm bg-accent text-surface-0 rounded hover:bg-accent/90 transition-colors font-medium"
+          >
+            {isLastStep ? "完成" : "下一步"}
+          </button>
+        )}
       </div>
     </div>
   );
