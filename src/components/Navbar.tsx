@@ -21,7 +21,7 @@ export default function Navbar() {
         </Link>
         <div className="flex items-center gap-6">
           <Link href="/" className={linkClass("/")}>首页</Link>
-          <Link href="/playground" className={linkClass("/playground")} data-onboarding-target="playground-link">Playground</Link>
+          <Link href="/playground" className={linkClass("/playground")} data-onboarding-target="playground-link">代码编辑区</Link>
           <Link href="/tags" className={linkClass("/tags")}>标签</Link>
           <Link href="/about" className={linkClass("/about")}>关于</Link>
           <Link href="/feedback" className={linkClass("/feedback")} data-onboarding-target="feedback-link">反馈</Link>

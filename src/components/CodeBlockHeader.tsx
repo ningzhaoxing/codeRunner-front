@@ -58,7 +58,7 @@ export default function CodeBlockHeader({
           <button
             onClick={onOpenPlayground}
             className="hover:bg-surface-3 px-1.5 py-0.5 rounded text-xs transition-colors"
-            title="在 Playground 中打开"
+            title="在代码编辑区中打开"
           >
             ↗
           </button>

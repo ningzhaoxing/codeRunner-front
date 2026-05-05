@@ -113,7 +113,7 @@ export default function CodeBlock({ blockId, blockIndex, code, language, article
   const handleOpenPlayground = useCallback(() => {
     const encoded = encodeCode(currentCode);
     if (encoded) {
-      // Save session data to sessionStorage for Playground to restore
+      // Save session data to sessionStorage for the code editor area to restore
       const sessionData = {
         sessionId: session.sessionId,
         messages: block?.aiMessages ?? [],

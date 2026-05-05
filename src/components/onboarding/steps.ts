@@ -70,7 +70,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "playground",
     targetSelector: '[data-onboarding-target="playground-link"]',
     content:
-      "🎨 看完博客想自己动手？Playground 支持 Go / Python / JavaScript / Java / C 五种语言，代码自动保存到本地。点这里进入 →",
+      "🎨 看完博客想自己动手？代码编辑区支持 Go / Python / JavaScript / Java / C 五种语言，代码自动保存到本地。点这里进入 →",
     position: "bottom",
     advanceOnRoute: "/playground",
   },
