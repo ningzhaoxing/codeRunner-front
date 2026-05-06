@@ -9,6 +9,7 @@ env:
   IMAGE_NAME: coderunner-front
   CONTAINER_NAME: coderunner-front
   DEPLOY_PATH: /root/workspace/codeRunner/codeRunner-front
+  REPOSITORY_URL: https://github.com/ningzhaoxing/codeRunner-frontend.git
 
 jobs:
   deploy:
@@ -21,13 +22,17 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          script_stop: true
           script: |
+            set -e
+
             # Pull latest code
             if [ ! -d "${{ env.DEPLOY_PATH }}/.git" ]; then
               mkdir -p ${{ env.DEPLOY_PATH }}
-              git clone https://github.com/ningzhaoxing/codeRunner-front.git ${{ env.DEPLOY_PATH }}
+              git clone ${{ env.REPOSITORY_URL }} ${{ env.DEPLOY_PATH }}
             fi
             cd ${{ env.DEPLOY_PATH }}
+            git remote set-url origin ${{ env.REPOSITORY_URL }}
             git fetch origin main
             git reset --hard origin/main
 
