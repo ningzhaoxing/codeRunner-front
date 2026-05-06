@@ -9,7 +9,7 @@ env:
   IMAGE_NAME: coderunner-front
   CONTAINER_NAME: coderunner-front
   DEPLOY_PATH: /root/workspace/codeRunner/codeRunner-front
-  REPOSITORY_URL: https://github.com/ningzhaoxing/codeRunner-frontend.git
+  REPOSITORY_URL: git@github.com:ningzhaoxing/codeRunner-frontend.git
 
 jobs:
   deploy:
@@ -25,6 +25,7 @@ jobs:
           script_stop: true
           script: |
             set -e
+            export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new"
 
             # Pull latest code
             if [ ! -d "${{ env.DEPLOY_PATH }}/.git" ]; then
