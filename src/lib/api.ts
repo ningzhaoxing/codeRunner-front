@@ -3,6 +3,46 @@ import { getVisitorId } from "./session";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:50012";
 
+export interface AuthUser {
+  id: string;
+  github_id: number;
+  login: string;
+  name?: string;
+  avatar_url?: string;
+}
+
+export function getGitHubLoginUrl(returnTo = "/"): string {
+  const normalizedReturnTo = returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/";
+  return `${API_BASE}/auth/github/login?return_to=${encodeURIComponent(normalizedReturnTo)}`;
+}
+
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const res = await fetch(`${API_BASE}/auth/me`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (res.status === 401) {
+    return null;
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(body.message || `HTTP ${res.status}`);
+  }
+  const body = (await res.json()) as { user?: AuthUser };
+  return body.user ?? null;
+}
+
+export async function logoutCurrentUser(): Promise<void> {
+  const res = await fetch(`${API_BASE}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(body.message || `HTTP ${res.status}`);
+  }
+}
+
 export async function executeCode(
   language: string,
   codeBlock: string,
