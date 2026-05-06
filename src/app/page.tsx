@@ -8,7 +8,7 @@ export default function Home() {
     <div className="max-w-[720px] mx-auto px-6 pt-14">
       {/* Hero */}
       <section className="py-12">
-        <h1 className="text-text-title text-2xl font-semibold mb-3">欢迎来到灵码云 👋</h1>
+        <h1 className="text-text-title text-2xl font-semibold mb-3">欢迎来到灵码云</h1>
         <p className="text-text-secondary text-[15px] leading-relaxed mb-4">
           灵码云不是传统意义上的技术博客，而是一种{" "}
           <span className="text-accent font-medium">可交互的新型博客</span>
